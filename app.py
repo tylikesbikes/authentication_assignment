@@ -31,11 +31,11 @@ def show_register_page():
 
     if form.validate_on_submit():
         
-        username = form.data.username
-        pw_hash_utf8 = bcrypt.generate_password_hash(form.data.password).decode("utf8")
-        email = form.data.email
-        first_name = form.data.first_name
-        last_name = form.data.last_name
+        username = form.data['username']
+        pw_hash_utf8 = bcrypt.generate_password_hash(form.data['password']).decode("utf8")
+        email = form.data['email']
+        first_name = form.data['first_name']
+        last_name = form.data['last_name']
 
         new_user = User(username = username,
                         password = pw_hash_utf8,
@@ -45,7 +45,7 @@ def show_register_page():
         db.session.add(new_user)
         db.session.commit()
 
-        return redirect('/secret')
+        return redirect(f'/users/{username}')
     else:
         return render_template('register.html', form = form)
     
@@ -57,12 +57,15 @@ def show_login_page():
 
     if form.validate_on_submit():
 
-        user = User.query.filter_by(username = form.data.username).first()
+        user = User.query.filter_by(username = form.data['username']).first()
 
-        if user and bcrypt.check_password_hash(user.password, form.data.password):
+        if user and bcrypt.check_password_hash(user.password, form.data['password']):
             session['username'] = user.username
             flash(f"Welcome, {user.username}")
-            return redirect('/secret', user = user)
+            return redirect(f'/users/{user.username}')
+        elif not bcrypt.check_password_hash(user.password, form.data['password']):
+            flash('Login Failed')
+            return redirect('/login')
 
     else:
         if request.method=='POST':
@@ -72,15 +75,18 @@ def show_login_page():
 @app.route('/logout', methods=['GET'])
 def logout():
     """Log User Out"""
-    
+
     session.pop('username')
     flash("You have successfully logged out")
     return redirect('/')
 
-@app.route('/secret')
-def show_secret():
-    """Show a message confirming secret access"""
+@app.route('/users/<string:username>')
+def logged_in(username):
+    """For a logged in user, show user details.
+    If not logged in, redirect to /"""
     
     if session.get('username',None):
-        return "You made it!"
-    return redirect('/')
+        user = User.query.filter_by(username = username).first()
+        return render_template('user_info.html', user = user)
+    else:
+        return redirect('/')
