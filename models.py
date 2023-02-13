@@ -2,6 +2,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField
 from wtforms.validators import Email, Length, InputRequired
+from flask_bcrypt import Bcrypt
+
+bcrypt = Bcrypt()
+
 
 db = SQLAlchemy()
 
@@ -30,7 +34,24 @@ class User(db.Model):
     @classmethod
     def register(cls, username, password, email, first_name, last_name):
         """Plan to add this as a class method later"""
-        pass
+        new_user = cls(username = username,
+                        password = bcrypt.generate_password_hash(password).decode("utf8"),
+                        email = email,
+                        first_name = first_name,
+                        last_name = last_name)
+        db.session.add(new_user)
+        db.session.commit()
+
+        return new_user
+    
+    @classmethod
+    def authenticate_user(cls, username, password):
+        user = cls.query.filter_by(username = username).first()
+        if user and bcrypt.check_password_hash(user.password, password):
+            return True
+        return False
+
+        
 
 class Feedback(db.Model):
     __tablename__ = 'feedback'

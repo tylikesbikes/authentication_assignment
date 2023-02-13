@@ -1,14 +1,11 @@
 from flask import Flask, redirect, render_template, session, flash, request
-from flask_bcrypt import Bcrypt
 from models import db, User, RegisterUserForm, LoginForm, FeedbackForm, Feedback
-
-
-bcrypt = Bcrypt()
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'keeta'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///authentication'
+
 
 db.app = app
 db.init_app(app)
@@ -32,22 +29,13 @@ def show_register_page():
     form = RegisterUserForm()
 
     if form.validate_on_submit():
-        
         username = form.data['username']
-        pw_hash_utf8 = bcrypt.generate_password_hash(form.data['password']).decode("utf8")
-        email = form.data['email']
-        first_name = form.data['first_name']
-        last_name = form.data['last_name']
-
-        new_user = User(username = username,
-                        password = pw_hash_utf8,
-                        email = email,
-                        first_name = first_name,
-                        last_name = last_name)
-        db.session.add(new_user)
-        db.session.commit()
-
-        session['username'] = new_user.username
+        User.register(form.data['username'],
+                      form.data['password'],
+                      form.data['email'],
+                      form.data['first_name'],
+                      form.data['last_name'])
+        session['username'] = username
 
         return redirect(f'/users/{username}')
     elif session.get('username', None):
@@ -65,17 +53,22 @@ def show_login_page():
 
         user = User.query.filter_by(username = form.data['username']).first()
 
-        if user and bcrypt.check_password_hash(user.password, form.data['password']):
+
+        if User.authenticate_user(user.username, form.data['password']):
             session['username'] = user.username
             flash(f"Welcome, {user.username}")
             return redirect(f'/users/{user.username}')
-        elif not bcrypt.check_password_hash(user.password, form.data['password']):
+
+        else:
             flash('Login Failed')
             return redirect('/login')
 
+    elif request.method=='POST':
+        flash('Login Failed')
+        return render_template('login.html', form = form)
     else:
-        if request.method=='POST':
-            flash('Login Failed')
+        if session.get('username',None):
+            return redirect(f"/users/{session['username']}")
         return render_template('login.html', form = form)
     
 @app.route('/logout', methods=['GET'])
@@ -100,7 +93,7 @@ def logged_in(username):
     
 @app.route('/feedback/<int:feedback_id>/update', methods=['GET','POST'])
 def update_feedback(feedback_id):
-    """show form to add or edit feedback"""
+    """show form to edit feedback"""
 
     feedback = Feedback.query.get_or_404(feedback_id)
     feedback_creator = feedback.username
@@ -143,7 +136,7 @@ def add_feedback(username):
             db.session.add(new_feedback)
             db.session.commit()
 
-            return redirect(f'/users/{username}')
+            return redirect(f'/users/{username}'), 201
         else:
             return render_template('add_feedback.html', form = form, user = user)
 
