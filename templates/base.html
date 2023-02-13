@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %} {% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="https://kit.fontawesome.com/c59cc2881b.css" crossorigin="anonymous"> -->
 </head>
 <body>
     <ul>
@@ -14,11 +15,18 @@
         </li>
 
         {% if "username" in session %}
-        <li style="display:inline;">
+        <li style="display:inline;margin-right:20px;">
+            <a href="/users/{{session['username']}}">View User Page ({{session['username']}})</a>
+        </li>
+        <li style="display:inline;margin-right:20px;">
             <a href="/logout">Logout ({{session['username']}})</a>
         </li>
+
         {% else %}
-        <li style="display:inline;">
+        <li style="display:inline;margin-right:20px;">
+            <a href="/register">Register</a>
+        </li>
+        <li style="display:inline;margin-right:20px;">
             <a href="/login">Log In</a>
         </li>
         {% endif %}
@@ -34,5 +42,6 @@
 
 
     {% endblock %}
+    <script src="https://kit.fontawesome.com/c59cc2881b.js" crossorigin="anonymous"></script
 </body>
 </html>

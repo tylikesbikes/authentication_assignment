@@ -7,10 +7,30 @@
     {% endblock %}
 
     {% block content %}
-        <h1>{{user.username}}</h1>
+        <h1>{{user.username}} 
+            {% if user.username == session['username'] %}<a href='/users/{{user.username}}/feedback/add'><i class="fa-solid fa-comment-medical"></i></a>{% endif %}</h1>
         <p>First Name: {{user.first_name}}</p>
         <p>Last Name: {{user.last_name}}</p>
         <p>Email Address: {{user.email}}</p>
+
+
+    {% if feedback|length > 0 %}
+    <h3 class="border">Feedback</h3>
+    {% for f in feedback %}
+    <p class="h3">
+        {{f.title}}
+        {% if user.username == session['username'] %}<a href='/feedback/{{f.id}}/update'><i class="fa-solid fa-pen-to-square"></a></i>{% endif %}
+    </p>
+    <p >{{f.content}}</p>
+
+    {% if user.username == session['username'] %}
+    <form action = "/feedback/{{f.id}}/delete" method="POST">
+        <button type="submit">Delete Feedback</button>
+    </form>
+    {% endif %}
+
+    {% endfor %}
+    {% endif %}
     {% endblock %}
 
 {% endif %}

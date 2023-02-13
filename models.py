@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
+from wtforms import StringField, PasswordField, TextAreaField
 from wtforms.validators import Email, Length, InputRequired
 
 db = SQLAlchemy()
@@ -25,20 +25,20 @@ class User(db.Model):
     last_name = db.Column(db.String(30),
                           nullable = False)
     
-    feedback_posts = db.relationship('Feedback', backref='user')
+    feedback_posts = db.relationship('Feedback', backref=('user'), cascade='all, delete-orphan')
     
     @classmethod
     def register(cls, username, password, email, first_name, last_name):
         """Plan to add this as a class method later"""
         pass
 
-    class Feedback(db.Model):
-        __tablename__ = 'feedback'
+class Feedback(db.Model):
+    __tablename__ = 'feedback'
 
-        id = db.Column(db.Integer, autoincrement=True, primary_key = True)
-        title = db.Column(db.String(100), nullable = False)
-        content = db.Column(db.Text, nullable = False)
-        username = db.Column(db.Text, db.ForeignKey('users.username'))
+    id = db.Column(db.Integer, autoincrement=True, primary_key = True)
+    title = db.Column(db.String(100), nullable = False)
+    content = db.Column(db.Text, nullable = False)
+    username = db.Column(db.Text, db.ForeignKey('users.username'))
 
 
 
@@ -60,3 +60,6 @@ class LoginForm(FlaskForm):
 
 class FeedbackForm(FlaskForm):
     """form for user feedback submission"""
+
+    title = StringField("Title", validators=[InputRequired()])
+    content = TextAreaField("Content", validators=[InputRequired()])

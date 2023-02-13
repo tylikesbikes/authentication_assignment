@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add Feedback Page
+{% endblock %}
+
+
+
+{% block content %}
+{% if "username" in session and session['username'] == user.username %}
+<form name="delete_user" action = "/users/{{user.username}}/delete" method="POST" id="delete_usr_btn">
+    <h1>{{user.username}}</h1>
+    <button type="submit">Delete User</button>
+</form>
+
+<form name="add_feedback" action="/users/{{user.username}}/feedback/add" method="POST">
+    {{form.hidden_tag()}}
+    {% for field in form 
+        if field.widget.input_type != 'hidden' %}
+
+    <p>
+        {{field.label}}
+        {{field}}
+
+        {% for error in field.errors %}
+            {{error}}
+        {% endfor %}
+    </p>
+    {% endfor %}
+    <button type="Submit">Submit</button>
+</form>
+{% endif %}
+
+{% endblock %}
